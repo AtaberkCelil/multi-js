@@ -1,5 +1,5 @@
 {
-  "name": "multi-js",
+  "name": "mthread-js",
   "version": "1.0.0",
   "description": "True multithreading for Node.js — auto and manual thread control, built on native worker_threads.",
   "main": "src/index.js",
@@ -34,10 +34,10 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MenemenDevs/multi-js.git"
+    "url": "git+https://github.com/MenemenDevs/mthread-js.git"
   },
-  "homepage": "https://github.com/MenemenDevs/multi-js#readme",
+  "homepage": "https://github.com/MenemenDevs/mthread-js#readme",
   "bugs": {
-    "url": "https://github.com/MenemenDevs/multi-js/issues"
+    "url": "https://github.com/MenemenDevs/mthread-js/issues"
   }
 }

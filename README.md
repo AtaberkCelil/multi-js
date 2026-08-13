@@ -1,8 +1,8 @@
-# multi-js
+# mthread-js
 
 > True multithreading for Node.js — auto and manual thread control, built on native `worker_threads`.
 
-[![npm version](https://img.shields.io/npm/v/multi-js.svg)](https://www.npmjs.com/package/multi-js)
+[![npm version](https://img.shields.io/npm/v/mthread-js.svg)](https://www.npmjs.com/package/mthread-js)
 [![Node.js ≥18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-12%20passing-brightgreen)](#)
@@ -35,7 +35,7 @@ JavaScript is single-threaded — but Node.js isn't.
 ## Installation
 
 ```bash
-npm install multi-js
+npm install mthread-js
 ```
 
 ---
@@ -89,7 +89,7 @@ Spawns a fresh thread, runs one task, terminates the thread, returns the result.
 Best for: infrequent heavy computations.
 
 ```js
-import { runTask } from 'multi-js';
+import { runTask } from 'mthread-js';
 
 const result = await runTask('./my-worker.js', [10, 20]);
 ```
@@ -107,7 +107,7 @@ Creates a fixed pool of persistent threads. Tasks are queued and dispatched to t
 Best for: high-frequency tasks where you want bounded concurrency.
 
 ```js
-import { ThreadPool } from 'multi-js';
+import { ThreadPool } from 'mthread-js';
 
 const pool = new ThreadPool('./my-worker.js', 4); // 4 persistent threads
 
@@ -146,7 +146,7 @@ Every task gets its **own dedicated OS thread**, spawned automatically. No confi
 Best for: burst workloads where you want maximum parallelism.
 
 ```js
-import { AutoThreader } from 'multi-js';
+import { AutoThreader } from 'mthread-js';
 
 const auto = new AutoThreader('./my-worker.js');
 
@@ -189,7 +189,7 @@ You **name your threads** and choose exactly which thread runs which task.
 Best for: long-lived specialized workers where routing matters.
 
 ```js
-import { ManualThreader } from 'multi-js';
+import { ManualThreader } from 'mthread-js';
 
 const mt = new ManualThreader('./my-worker.js');
 
