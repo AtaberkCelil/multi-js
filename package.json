@@ -1,0 +1,43 @@
+{
+  "name": "multi-js",
+  "version": "1.0.0",
+  "description": "True multithreading for Node.js — auto and manual thread control, built on native worker_threads.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node --test test/index.test.js",
+    "example": "node examples/demo.js"
+  },
+  "keywords": [
+    "multithreading",
+    "worker_threads",
+    "threads",
+    "parallel",
+    "nodejs",
+    "performance",
+    "concurrency",
+    "background"
+  ],
+  "author": "MenemenDevs",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MenemenDevs/multi-js.git"
+  },
+  "homepage": "https://github.com/MenemenDevs/multi-js#readme",
+  "bugs": {
+    "url": "https://github.com/MenemenDevs/multi-js/issues"
+  }
+}
