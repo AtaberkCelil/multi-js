@@ -33,7 +33,7 @@ export async function runTask(workerScriptPath, args = []) {
   try {
     return await pool.execute(args);
   } finally {
-    pool.terminate();
+    await pool.terminate();
   }
 }
 

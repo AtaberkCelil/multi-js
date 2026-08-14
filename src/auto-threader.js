@@ -1,11 +1,24 @@
 import { Worker } from 'node:worker_threads';
 import os from 'node:os';
+import {
+  workerError,
+  messageError,
+  unexpectedExitError,
+  terminatedError,
+  destroyedError
+} from './errors.js';
 
 /**
  * AutoThreader — gives every task its own dedicated OS thread automatically.
  *
  * Each call to run() spawns a brand-new Worker, executes the task, then
- * terminates the thread. runAll() launches every task simultaneously.
+ * terminates the thread. runAll() launches every task simultaneously,
+ * respecting `maxConcurrent` (excess tasks are queued and start as slots
+ * free up).
+ *
+ * runAll() uses `Promise.all` semantics: it rejects as soon as the first
+ * task fails. Sibling tasks keep running to completion but their results
+ * are discarded.
  *
  * @example
  * const threader = new AutoThreader('./my-worker.js');
@@ -20,11 +33,18 @@ export class AutoThreader {
    * @param {number} [options.maxConcurrent] - Max simultaneous threads (default: CPU count × 2).
    */
   constructor(workerScriptPath, { maxConcurrent = os.cpus().length * 2 } = {}) {
+    if (typeof workerScriptPath !== 'string' || workerScriptPath.length === 0) {
+      throw new TypeError('AutoThreader: workerScriptPath must be a non-empty string.');
+    }
+    if (!Number.isInteger(maxConcurrent) || maxConcurrent < 1) {
+      throw new RangeError('AutoThreader: maxConcurrent must be a positive integer.');
+    }
     this.workerScriptPath = workerScriptPath;
     this.maxConcurrent    = maxConcurrent;
-    this._active          = new Set();
-    this._queue           = [];
+    this._active          = new Set(); // workers currently running a task
+    this._queue           = [];        // { args, resolve, reject }
     this._running         = 0;
+    this._destroyed       = false;
   }
 
   /**
@@ -33,6 +53,9 @@ export class AutoThreader {
    * @returns {Promise<any>}
    */
   run(args = []) {
+    if (this._destroyed) {
+      return Promise.reject(destroyedError('AutoThreader'));
+    }
     return new Promise((resolve, reject) => {
       const task = { args, resolve, reject };
       if (this._running < this.maxConcurrent) {
@@ -47,58 +70,85 @@ export class AutoThreader {
   /**
    * Run every task simultaneously — each on its own dedicated thread.
    * Tasks beyond maxConcurrent are queued and start as slots free up.
+   * Rejects fast on the first failing task (Promise.all semantics).
    * @param {Array<Array>} argsArray - Array of argument arrays.
    * @returns {Promise<Array<any>>}
    */
   runAll(argsArray = []) {
-    return Promise.all(argsArray.map(args => this.run(args)));
+    return Promise.all(argsArray.map((args) => this.run(args)));
   }
 
   /**
-   * Terminate any threads still running (e.g. after an error or early exit).
+   * Terminate any threads still running and reject all pending/queued tasks.
+   * Safe to call more than once.
    */
   destroy() {
+    this._destroyed = true;
+    const err = terminatedError('AutoThreader');
+    for (const task of this._queue) task.reject(err);
+    this._queue = [];
     for (const worker of this._active) {
-      worker.terminate();
+      if (worker.task) worker.task.reject(err);
+      this._finish(worker);
     }
-    this._active.clear();
     this._running = 0;
-    this._queue   = [];
   }
 
   // ─── Internal ────────────────────────────────────────────────────────────────
 
-  _spawnWorker({ args, resolve, reject }) {
+  _spawnWorker(task) {
     this._running++;
     const worker = new Worker(this.workerScriptPath);
+    worker.task = task;
     this._active.add(worker);
 
     // Use id=1 — each worker handles exactly one message
-    worker.postMessage({ id: 1, args });
-
     worker.once('message', (msg) => {
       this._finish(worker);
       if (msg.success) {
-        resolve(msg.result);
+        task.resolve(msg.result);
       } else {
-        const err = new Error(msg.error);
-        if (msg.stack) err.stack = msg.stack;
-        reject(err);
+        task.reject(workerError(msg.error, msg.stack));
       }
     });
 
     worker.once('error', (err) => {
       this._finish(worker);
-      reject(err);
+      task.reject(err);
     });
+
+    worker.once('exit', (code) => {
+      if (!worker.done) {
+        this._finish(worker);
+        task.reject(unexpectedExitError(code));
+      }
+    });
+
+    worker.once('messageerror', (cause) => {
+      if (!worker.done) {
+        this._finish(worker);
+        task.reject(messageError(cause));
+      }
+    });
+
+    try {
+      worker.postMessage({ id: 1, args: task.args });
+    } catch (err) {
+      if (!worker.done) {
+        this._finish(worker);
+        task.reject(err);
+      }
+    }
   }
 
   _finish(worker) {
+    worker.done = true;
+    worker.task = null;
     this._active.delete(worker);
-    worker.terminate();
-    this._running--;
+    worker.terminate().catch(() => {});
+    if (this._running > 0) this._running--;
     // Drain the queue now that a slot freed up
-    if (this._queue.length > 0) {
+    if (!this._destroyed && this._queue.length > 0) {
       this._spawnWorker(this._queue.shift());
     }
   }
