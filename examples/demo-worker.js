@@ -6,7 +6,8 @@ defineWorker((index, mult) => {
   }
 
   // ThreadPool heavy task logic
-  let count = 0;
-  for (let j = 0; j < 10000000; j++) count++;
+  for (let j = 0; j < 10000000; j++) {
+    Math.sqrt(j);
+  }
   return `Task ${index} finished in true native background thread!`;
 });
