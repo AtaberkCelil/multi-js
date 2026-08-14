@@ -5,6 +5,9 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
+# TypeScript build output
+ts-worker-pool/dist/
+
 # Coverage
 coverage/
 .nyc_output/
