@@ -34,10 +34,10 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MenemenDevs/mthread-js.git"
+    "url": "git+https://github.com/AtaberkCelil/multi-js.git"
   },
-  "homepage": "https://github.com/MenemenDevs/mthread-js#readme",
+  "homepage": "https://github.com/AtaberkCelil/multi-js#readme",
   "bugs": {
-    "url": "https://github.com/MenemenDevs/mthread-js/issues"
+    "url": "https://github.com/AtaberkCelil/multi-js/issues"
   }
 }
