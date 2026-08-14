@@ -3,8 +3,8 @@
 > True multithreading for Node.js — auto and manual thread control, built on native `worker_threads`.
 
 [![npm version](https://img.shields.io/npm/v/mthread-js.svg)](https://www.npmjs.com/package/mthread-js)
-[![Node.js ≥18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/node/v/mthread-js.svg)](https://nodejs.org)
+[![License](https://img.shields.io/npm/l/mthread-js.svg)](LICENSE)
 
 ---
 
@@ -349,4 +349,4 @@ node examples/demo.js
 
 ## License
 
-[ISC](LICENSE) © 2026
+[ISC](LICENSE) © 2026 AtaberkCelil
