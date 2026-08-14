@@ -9,7 +9,7 @@
 ---
 
 JavaScript is single-threaded — but Node.js isn't.  
-`multi-js` gives you a clean, promise-based API to run real parallel OS threads with zero native dependencies.
+`mthread-js` gives you a clean, promise-based API to run real parallel OS threads with zero native dependencies.
 
 ---
 
@@ -45,7 +45,7 @@ npm install mthread-js
 
 ```js
 // my-worker.js
-import { defineWorker } from 'multi-js';
+import { defineWorker } from 'mthread-js';
 
 defineWorker((a, b) => {
   // This runs on a real background thread
@@ -56,7 +56,7 @@ defineWorker((a, b) => {
 ### 2. Use it from your main file
 
 ```js
-import { runTask } from 'multi-js';
+import { runTask } from 'mthread-js';
 
 const result = await runTask('./my-worker.js', [10, 20]);
 console.log(result); // 30 — computed on a separate OS thread
@@ -71,7 +71,7 @@ console.log(result); // 30 — computed on a separate OS thread
 Call this **inside your worker file** to register the function that runs on the background thread.
 
 ```js
-import { defineWorker } from 'multi-js';
+import { defineWorker } from 'mthread-js';
 
 defineWorker(async (x, y) => {
   return x * y;
