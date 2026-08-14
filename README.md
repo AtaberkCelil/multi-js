@@ -257,6 +257,86 @@ If you need true shared memory, use `SharedArrayBuffer` with `Atomics`.
 
 ---
 
+## Error Handling
+
+Every API returns a `Promise`, and every failure mode below **rejects** that
+promise — nothing throws synchronously (the only synchronous throws are
+constructor misuse and `createThread`/`removeThread` misuse, e.g. duplicate
+or unknown thread names).
+
+### Failure modes
+
+| Failure | What you get |
+|---|---|
+| Worker function throws / async function rejects | Rejected promise; original `message` and `stack` are preserved |
+| Worker file missing or has a syntax error | Rejected promise with an actionable message (`Cannot find module …`, `SyntaxError: …`) |
+| Worker exits unexpectedly (`process.exit()`, killed externally) | Rejected with `code: 'ERR_WORKER_UNEXPECTED_EXIT'` |
+| Receive-side structured-clone failure (`messageerror`) | Rejected with `code: 'ERR_WORKER_MESSAGEERROR'` (original error in `.cause`) |
+| Args/result not structured-cloneable (e.g. functions) | Rejected with the `DataCloneError` (`… could not be cloned.`) |
+| `terminate()`/`destroy()`/`removeThread()` called while tasks are pending | Pending + queued tasks reject with `code: 'ERR_TERMINATED'` |
+| Calling `execute()`/`run()`/`runOn()` after termination | Rejects with `code: 'ERR_TERMINATED'` |
+| Every worker in a pool exits; queued tasks can never start | Rejected with `code: 'ERR_NO_WORKERS'` |
+
+### No built-in timeout
+
+If a worker never responds (e.g. an infinite loop), the task's promise stays
+pending — there is no default timeout. This is a deliberate trade-off: a
+timeout cannot distinguish "still computing" from "dead", and killing a busy
+worker mid-computation can leave your program in an undefined state. Use
+`terminate()`/`destroy()` (they reject pending tasks) or race your own timer:
+
+```js
+const result = await Promise.race([
+  pool.execute([10, 20]),
+  new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('task timed out')), 5000)
+  ),
+]);
+```
+
+### Example: catching failures
+
+```js
+import { ThreadPool } from 'mthread-js';
+
+const pool = new ThreadPool('./my-worker.js', 4);
+
+try {
+  const result = await pool.execute([10, 20]);
+} catch (err) {
+  if (err.code === 'ERR_WORKER_MESSAGEERROR') {
+    // Structured-clone failure — the message never arrived intact
+  } else if (err.code === 'ERR_WORKER_UNEXPECTED_EXIT') {
+    // The worker crashed while this task was in flight
+  } else if (err.code === 'ERR_TERMINATED') {
+    // The pool was terminated before the task finished
+  } else {
+    // Normal worker error — err.message / err.stack come from the worker
+  }
+} finally {
+  await pool.terminate();
+}
+```
+
+### Multi-task semantics: fail-fast
+
+`AutoThreader.runAll()`, `ManualThreader.runOnMany()` and
+`ManualThreader.broadcast()` use **`Promise.all` semantics**: the returned
+promise rejects as soon as the first task fails. Sibling tasks keep running
+to completion on their threads, but their results are discarded. If you need
+per-task outcomes instead, submit tasks individually and use
+`Promise.allSettled()` yourself.
+
+### `runTask()` specifics
+
+`runTask()` spawns a pool of one, runs your task, then terminates it — the
+rejection behavior is identical to `ThreadPool`. Because the pool is
+internal, a never-responding worker leaves the `runTask` promise pending
+forever; prefer `ThreadPool`/`ManualThreader` when you need the terminate
+escape hatch.
+
+---
+
 ## Examples
 
 See the [`examples/`](examples/) folder for runnable demos.
