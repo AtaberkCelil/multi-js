@@ -31,5 +31,8 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run tests with coverage (enforces minimum thresholds)
+        run: npm run coverage
+
       - name: Run linter
         run: npm run lint

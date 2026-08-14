@@ -5,6 +5,10 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
+# Coverage
+coverage/
+.nyc_output/
+
 # OS
 .DS_Store
 Thumbs.db
