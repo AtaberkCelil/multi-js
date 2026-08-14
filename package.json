@@ -1,6 +1,6 @@
 {
   "name": "mthread-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "True multithreading for Node.js — auto and manual thread control, built on native worker_threads.",
   "main": "src/index.js",
   "exports": {
