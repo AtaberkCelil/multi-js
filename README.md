@@ -5,7 +5,6 @@
 [![npm version](https://img.shields.io/npm/v/mthread-js.svg)](https://www.npmjs.com/package/mthread-js)
 [![Node.js ≥18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-12%20passing-brightgreen)](#)
 
 ---
 
