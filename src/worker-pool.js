@@ -1,4 +1,5 @@
 import { createWorkerNode } from './adapter-node.js';
+import { trackCleanup } from './cleanup.js';
 import {
   workerError,
   messageError,
@@ -30,6 +31,7 @@ export class ThreadPool {
     this.taskId = 0;
     this.callbacks = new Map();
     this.terminated = false;
+    this._cleanup = trackCleanup(() => this._hardTerminate());
     this.init();
   }
 
@@ -168,13 +170,21 @@ export class ThreadPool {
    */
   async terminate() {
     if (this.terminated) return;
-    this.terminated = true;
-
     const err = terminatedError('ThreadPool');
     for (const cb of this.callbacks.values()) cb.reject(err);
     this.callbacks.clear();
-    this.queue = [];
+    this._hardTerminate();
+    this._cleanup();
+  }
 
+  /**
+   * Shutdown used by the global SIGINT/SIGTERM/uncaughtException cleanup:
+   * terminates workers without rejecting pending promises (see cleanup.js).
+   */
+  _hardTerminate() {
+    if (this.terminated) return;
+    this.terminated = true;
+    this.queue = [];
     for (const worker of this.workers) {
       worker.pendingId = null;
       worker.terminate();

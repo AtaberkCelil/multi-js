@@ -17,8 +17,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node --test test/index.test.js",
-    "coverage": "c8 --check-coverage --statements 85 --branches 80 --functions 85 --lines 85 --reporter=text --reporter=lcov node --test test/index.test.js",
+    "test": "node --test test/index.test.js test/process-exit.test.js",
+    "coverage": "c8 --check-coverage --statements 85 --branches 80 --functions 85 --lines 85 --reporter=text --reporter=lcov node --test test/index.test.js test/process-exit.test.js",
     "lint": "eslint .",
     "example": "node examples/demo.js"
   },
@@ -32,15 +32,15 @@
     "concurrency",
     "background"
   ],
-  "author": "MenemenDevs",
+  "author": "AtaberkCelil",
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AtaberkCelil/multi-js.git"
+    "url": "git+https://github.com/AtaberkCelil/mthread-js.git"
   },
-  "homepage": "https://github.com/AtaberkCelil/multi-js#readme",
+  "homepage": "https://github.com/AtaberkCelil/mthread-js#readme",
   "bugs": {
-    "url": "https://github.com/AtaberkCelil/multi-js/issues"
+    "url": "https://github.com/AtaberkCelil/mthread-js/issues"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

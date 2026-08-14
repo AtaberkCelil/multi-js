@@ -1,5 +1,6 @@
 import { Worker } from 'node:worker_threads';
 import os from 'node:os';
+import { trackCleanup } from './cleanup.js';
 import {
   workerError,
   messageError,
@@ -45,6 +46,7 @@ export class AutoThreader {
     this._queue           = [];        // { args, resolve, reject }
     this._running         = 0;
     this._destroyed       = false;
+    this._cleanup         = trackCleanup(() => this._hardDestroy());
   }
 
   /**
@@ -89,6 +91,21 @@ export class AutoThreader {
     this._queue = [];
     for (const worker of this._active) {
       if (worker.task) worker.task.reject(err);
+      this._finish(worker);
+    }
+    this._running = 0;
+    this._cleanup();
+  }
+
+  /**
+   * Shutdown used by the global SIGINT/SIGTERM/uncaughtException cleanup:
+   * terminates workers without rejecting pending promises (see cleanup.js).
+   */
+  _hardDestroy() {
+    if (this._destroyed) return;
+    this._destroyed = true;
+    this._queue = [];
+    for (const worker of this._active) {
       this._finish(worker);
     }
     this._running = 0;

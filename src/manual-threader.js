@@ -1,4 +1,5 @@
 import { Worker } from 'node:worker_threads';
+import { trackCleanup } from './cleanup.js';
 import {
   workerError,
   messageError,
@@ -39,6 +40,7 @@ export class ManualThreader {
   constructor(defaultScriptPath) {
     this._defaultScript = defaultScriptPath;
     this._threads       = new Map(); // name → { worker, callbacks, taskId, destroyed }
+    this._cleanup       = trackCleanup(() => this._hardDestroy());
   }
 
   /**
@@ -177,6 +179,20 @@ export class ManualThreader {
     for (const state of this._threads.values()) {
       state.destroyed = true;
       this._rejectPending(state, terminatedError('ManualThreader'));
+      state.worker.terminate().catch(() => {});
+    }
+    this._threads.clear();
+    this._cleanup();
+  }
+
+  /**
+   * Shutdown used by the global SIGINT/SIGTERM/uncaughtException cleanup:
+   * terminates workers without rejecting pending promises (see cleanup.js).
+   */
+  _hardDestroy() {
+    if (this._threads.size === 0) return;
+    for (const state of this._threads.values()) {
+      state.destroyed = true;
       state.worker.terminate().catch(() => {});
     }
     this._threads.clear();
